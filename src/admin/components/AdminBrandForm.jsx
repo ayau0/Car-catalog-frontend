@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import AuthContext from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -12,11 +12,25 @@ const AdminBrandForm = () => {
     country: '',
     description: '',
     logo_url: '',
-    category: ''
+    category_id: '',
   });
+
+  const [categories, setCategories] = useState([]);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // Получаем категории с сервера
+    axios.get('http://localhost:8080/categories', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => setCategories(res.data))
+      .catch(() => setError('Ошибка при загрузке категорий'));
+  }, [token]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setError(null);
+
     axios.post('http://localhost:8080/brands', form, {
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -24,36 +38,12 @@ const AdminBrandForm = () => {
       alert('Бренд қосылды!');
       navigate(-1);
     })
-    .catch(() => alert('Қате кетті.'));
+    .catch(() => setError('Қате кетті при добавлении бренда.'));
   };
 
   return (
-    <div
-      style={{
-        maxWidth: 400,
-        margin: '40px auto',
-        padding: 20,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        borderRadius: 8,
-        backgroundColor: '#fff',
-        fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif'
-      }}
-    >
-      <button
-        onClick={() => navigate(-1)}
-        style={{
-          marginBottom: 20,
-          padding: '8px 16px',
-          backgroundColor: '#6b7280',
-          color: 'white',
-          border: 'none',
-          borderRadius: 6,
-          cursor: 'pointer',
-          fontWeight: '600',
-        }}
-      >
-        ← Назад
-      </button>
+    <div style={containerStyle}>
+      <button onClick={() => navigate(-1)} style={backButtonStyle}>← Назад</button>
 
       <h3 style={{ marginBottom: 20, textAlign: 'center' }}>Бренд қосу</h3>
 
@@ -85,13 +75,20 @@ const AdminBrandForm = () => {
           onChange={e => setForm({ ...form, logo_url: e.target.value })}
           style={inputStyle}
         />
-        <input
-          placeholder="Санат (Category)"
-          value={form.category}
-          onChange={e => setForm({ ...form, category: e.target.value })}
+
+        <select
           required
+          value={form.category_id}
+          onChange={e => setForm({ ...form, category_id: e.target.value })}
           style={inputStyle}
-        />
+        >
+          <option value="">Выберите категорию</option>
+          {categories.map(cat => (
+            <option key={cat.id} value={cat.id}>{cat.name}</option>
+          ))}
+        </select>
+
+        {error && <p style={{ color: 'red', marginBottom: 15 }}>{error}</p>}
 
         <button
           type="submit"
@@ -104,6 +101,27 @@ const AdminBrandForm = () => {
       </form>
     </div>
   );
+};
+
+const containerStyle = {
+  maxWidth: 400,
+  margin: '40px auto',
+  padding: 20,
+  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+  borderRadius: 8,
+  backgroundColor: '#fff',
+  fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
+};
+
+const backButtonStyle = {
+  marginBottom: 20,
+  padding: '8px 16px',
+  backgroundColor: '#6b7280',
+  color: 'white',
+  border: 'none',
+  borderRadius: 6,
+  cursor: 'pointer',
+  fontWeight: '600',
 };
 
 const inputStyle = {

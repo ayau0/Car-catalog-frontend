@@ -1,9 +1,9 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import AuthContext from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-const CarForm = () => {
+const AdminCarForm = () => {
   const { token } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -11,11 +11,28 @@ const CarForm = () => {
   const [year, setYear] = useState('');
   const [price, setPrice] = useState('');
   const [brandId, setBrandId] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const [categories, setCategories] = useState([]);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!token) return;
+
+    axios.get('http://localhost:8080/categories', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(res => setCategories(res.data))
+    .catch(() => setError('Не удалось загрузить категории'));
+  }, [token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+
+    if (!categoryId) {
+      setError('Пожалуйста, выберите категорию');
+      return;
+    }
 
     try {
       await axios.post(
@@ -25,7 +42,8 @@ const CarForm = () => {
           year: Number(year),
           price: Number(price),
           brand_id: Number(brandId),
-          user_id: 1 // немесе токеннен алған ID
+          category_id: Number(categoryId),
+          user_id: 1 // или из токена, если надо
         },
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -141,6 +159,30 @@ const CarForm = () => {
           />
         </div>
 
+        <div style={{ marginBottom: 15 }}>
+          <label style={{ display: 'block', marginBottom: 6, fontWeight: '600' }}>Категория:</label>
+          <select
+            value={categoryId}
+            onChange={e => setCategoryId(e.target.value)}
+            required
+            style={{
+              width: '100%',
+              padding: 8,
+              borderRadius: 6,
+              border: '1px solid #ccc',
+              fontSize: 16,
+              boxSizing: 'border-box'
+            }}
+          >
+            <option value="">Выберите категорию</option>
+            {categories.map(cat => (
+              <option key={cat.ID || cat.id} value={cat.ID || cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {error && (
           <p style={{ color: 'red', marginBottom: 15, fontWeight: '600' }}>
             {error}
@@ -171,4 +213,4 @@ const CarForm = () => {
   );
 };
 
-export default CarForm;
+export default AdminCarForm;

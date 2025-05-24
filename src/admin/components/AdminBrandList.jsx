@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import AuthContext from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const AdminBrandList = () => {
   const { token } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,9 +14,6 @@ const AdminBrandList = () => {
   const [editingBrand, setEditingBrand] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
-    country: '',
-    description: '',
-    logo_url: '',
   });
 
   useEffect(() => {
@@ -23,59 +22,82 @@ const AdminBrandList = () => {
         const response = await axios.get('http://localhost:8080/brands', {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log('Brands from API:', response.data); // Лог для проверки структуры
         setBrands(response.data);
       } catch (err) {
-        setError('Ошибка при загрузке брендов');
+        setError('Қате брендтерді жүктеу кезінде: ' + (err.response?.data?.error || err.message));
       } finally {
         setLoading(false);
       }
     };
+
     fetchBrands();
   }, [token]);
 
+  // Получаем корректный ID из объекта бренда
+  const getBrandID = (brand) => brand.ID || brand.id;
+
   const startEdit = (brand) => {
+    const brandID = getBrandID(brand);
+    if (!brandID) {
+      setError('Қате: жарамсыз бренд ID');
+      return;
+    }
     setEditingBrand(brand);
-    setFormData({
-      name: brand.name || '',
-      country: brand.country || '',
-      description: brand.description || '',
-      logo_url: brand.logo_url || '',
-    });
+    setFormData({ name: brand.name });
     setError(null);
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData({ ...formData, name: e.target.value });
   };
 
   const handleSave = async () => {
-    if (!editingBrand || !editingBrand.ID) {
-      setError('Ошибка: неверный ID бренда');
+    const brandID = getBrandID(editingBrand);
+    if (!brandID) {
+      setError('Қате: жарамсыз бренд ID');
       return;
     }
 
     try {
       await axios.put(
-        `http://localhost:8080/brands/${editingBrand.ID}`,
-        formData,
+        `http://localhost:8080/brands/${brandID}`,
+        { name: formData.name },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      setBrands(prevBrands =>
-        prevBrands.map(b =>
-          b.ID === editingBrand.ID ? { ...b, ...formData } : b
+      setBrands(prev =>
+        prev.map(b =>
+          getBrandID(b) === brandID ? { ...b, name: formData.name } : b
         )
       );
+
       setEditingBrand(null);
       setError(null);
     } catch (err) {
-      setError('Ошибка при сохранении: ' + (err.response?.data?.message || err.message));
+      setError('Қате сақтау кезінде: ' + (err.response?.data?.error || err.message));
+    }
+  };
+
+  const handleDelete = async (brandID) => {
+    if (!brandID) {
+      alert('Қате: Бренд ID жоқ');
+      return;
+    }
+
+    const confirmed = window.confirm('Сіз бұл брендті өшіргіңіз келе ме?');
+    if (!confirmed) return;
+
+    try {
+      await axios.delete(`http://localhost:8080/brands/${brandID}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setBrands(prev => prev.filter(brand => getBrandID(brand) !== brandID));
+    } catch (err) {
+      setError('Қате өшіру кезінде: ' + (err.response?.data?.error || err.message));
     }
   };
 
@@ -84,28 +106,32 @@ const AdminBrandList = () => {
     setError(null);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Растанасыз ба? Бренд жойылсын ба?')) return;
-    try {
-      await axios.delete(`http://localhost:8080/brands/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setBrands(prevBrands => prevBrands.filter(b => b.ID !== id));
-    } catch (err) {
-      alert('Қате жойғанда: ' + (err.response?.data?.message || err.message));
-    }
-  };
-
   if (loading) return <p>Жүктелуде...</p>;
   if (error && !editingBrand) return <p style={{ color: 'red' }}>{error}</p>;
 
   return (
-    <div style={{ maxWidth: 600, margin: '40px auto', fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif' }}>
+    <div style={{ maxWidth: 600, margin: '40px auto', fontFamily: 'Segoe UI' }}>
+      <button
+        onClick={() => navigate(-1)}
+        style={{
+          marginBottom: 20,
+          padding: '8px 16px',
+          backgroundColor: '#6b7280',
+          color: 'white',
+          border: 'none',
+          borderRadius: 6,
+          cursor: 'pointer',
+          fontWeight: '600',
+        }}
+      >
+        ← Назад
+      </button>
+
       <h2 style={{ textAlign: 'center', marginBottom: 20 }}>Брендтер тізімі</h2>
 
       {brands.map(brand => (
         <div
-          key={brand.ID}
+          key={getBrandID(brand)}
           style={{
             border: '1px solid #ddd',
             padding: 15,
@@ -114,12 +140,10 @@ const AdminBrandList = () => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            backgroundColor: '#fafafa',
+            backgroundColor: '#fdfdfd',
           }}
         >
-          <div>
-            <strong>{brand.name}</strong> — {brand.country}
-          </div>
+          <div><strong>{brand.name}</strong></div>
           <div>
             <button
               onClick={() => startEdit(brand)}
@@ -137,7 +161,7 @@ const AdminBrandList = () => {
               Өңдеу
             </button>
             <button
-              onClick={() => handleDelete(brand.ID)}
+              onClick={() => handleDelete(getBrandID(brand))}
               style={{
                 backgroundColor: '#ef4444',
                 color: 'white',
@@ -148,7 +172,7 @@ const AdminBrandList = () => {
                 fontWeight: '600',
               }}
             >
-              Жою
+              Өшіру
             </button>
           </div>
         </div>
@@ -168,47 +192,12 @@ const AdminBrandList = () => {
 
           {error && <p style={{ color: 'red' }}>{error}</p>}
 
-          <label style={{ display: 'block', marginBottom: 8 }}>
+          <label style={{ display: 'block', marginBottom: 15 }}>
             Аты:
             <input
               type="text"
               name="name"
               value={formData.name}
-              onChange={handleChange}
-              style={{ marginLeft: 10, padding: 6, width: '60%' }}
-              required
-            />
-          </label>
-
-          <label style={{ display: 'block', marginBottom: 8 }}>
-            Ел (Country):
-            <input
-              type="text"
-              name="country"
-              value={formData.country}
-              onChange={handleChange}
-              style={{ marginLeft: 10, padding: 6, width: '60%' }}
-              required
-            />
-          </label>
-
-          <label style={{ display: 'block', marginBottom: 8 }}>
-            Сипаттама (Description):
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              style={{ marginLeft: 10, padding: 6, width: '60%', minHeight: 80 }}
-              required
-            />
-          </label>
-
-          <label style={{ display: 'block', marginBottom: 15 }}>
-            Логотип URL:
-            <input
-              type="url"
-              name="logo_url"
-              value={formData.logo_url}
               onChange={handleChange}
               style={{ marginLeft: 10, padding: 6, width: '60%' }}
             />
