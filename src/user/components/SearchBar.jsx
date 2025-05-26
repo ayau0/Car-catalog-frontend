@@ -1,8 +1,10 @@
+// src/user/components/SearchBar.jsx
+
 import React from 'react';
 
 const SearchBar = ({ searchTerm, onSearchChange }) => {
   return (
-    <div style={{ marginBottom: 20 }}>
+    <div>
       <input
         type="text"
         placeholder="Поиск по названию или модели..."
