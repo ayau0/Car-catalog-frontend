@@ -13,7 +13,7 @@ import AdminPanel from './admin/pages/AdminPanel';
 import AdminCarList from './admin/components/AdminCarList';
 import CarEditForm from './admin/components/CarEditForm';
 import AdminBrandList from './admin/components/AdminBrandList';
-
+import AboutPage from './user/pages/AboutPage';
 
 
 function App() {
@@ -36,6 +36,7 @@ function App() {
 <Route path="/admin/cars" element={<AdminCarList />} />
 <Route path="/admin/brands" element={<AdminBrandList />} />
 <Route path="/admin/cars/edit/:id" element={<CarEditForm />} />
+<Route path="/about" element={<AboutPage />} />
 
           <Route
             path="/cars/:id"

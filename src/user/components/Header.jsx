@@ -1,6 +1,7 @@
 // src/user/components/Header.jsx
 
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import SearchBar from './SearchBar';
 
 export const HEADER_HEIGHT = 80;
@@ -33,7 +34,9 @@ const Header = ({ onSearch }) => {
     >
       {/* Логотип */}
       <div style={{ fontWeight: 'bold', fontSize: '1.7rem', cursor: 'pointer' }}>
-        <span style={{ color: '#4fd1c5' }}>Car</span>Catalog
+        <Link to="/" style={{ textDecoration: 'none', color: '#fff' }}>
+          <span style={{ color: '#4fd1c5' }}>Car</span>Catalog
+        </Link>
       </div>
 
       {/* Поиск */}
@@ -43,21 +46,22 @@ const Header = ({ onSearch }) => {
 
       {/* Навигация */}
       <nav style={{ display: 'flex', gap: 20, alignItems: 'center', fontSize: 15 }}>
-        <a href="#about" style={navLinkStyle}>О компании</a>
-        <a href="#services" style={navLinkStyle}>Услуги</a>
-        <a href="#catalog" style={navLinkStyle}>Каталог</a>
-        <a href="#contacts" style={navLinkStyle}>Контакты</a>
+        <Link to="/about" style={navLinkStyle}>О компании</Link>
+        <Link to="/services" style={navLinkStyle}>Услуги</Link>
+        <Link to="/catalog" style={navLinkStyle}>Каталог</Link>
+        <Link to="/contacts" style={navLinkStyle}>Контакты</Link>
       </nav>
 
       {/* Кнопки */}
       <div style={{ display: 'flex', gap: 15 }}>
-        <button style={btnStyle} onClick={() => alert('Вход')}>Вход</button>
-        <button
-          style={{ ...btnStyle, backgroundColor: '#4fd1c5', color: '#0d253f' }}
-          onClick={() => alert('Регистрация')}
-        >
-          Регистрация
-        </button>
+        <Link to="/login" style={{ textDecoration: 'none' }}>
+          <button style={btnStyle}>Вход</button>
+        </Link>
+        <Link to="/register" style={{ textDecoration: 'none' }}>
+          <button style={{ ...btnStyle, backgroundColor: '#4fd1c5', color: '#0d253f' }}>
+            Регистрация
+          </button>
+        </Link>
       </div>
     </header>
   );

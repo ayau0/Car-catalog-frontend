@@ -1,5 +1,3 @@
-// src/user/pages/CarCatalogPage.jsx
-
 import React, { useState, useEffect } from 'react';
 import Header, { HEADER_HEIGHT } from '../components/Header';
 import axios from 'axios';
@@ -40,7 +38,7 @@ const CarCatalogPage = () => {
   return (
     <>
       <Header onSearch={handleSearch} />
-      <main style={{ paddingTop: HEADER_HEIGHT + 30, padding: 20 }}>
+      <main style={{ paddingTop: HEADER_HEIGHT, paddingLeft: 20, paddingRight: 20, paddingBottom: 20 }}>
         {filteredCars.length === 0 ? (
           <p>Машины не найдены</p>
         ) : (
